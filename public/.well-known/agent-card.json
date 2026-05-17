@@ -1,30 +1,44 @@
 {
   "name": "Mind Sync Relay Orchestrator",
-  "description": "Mind Sync Relay platformunda çalışan ERC-8004 uyumlu AI Agent. Neural synchronization, mind relay operations, thought transmission ve multi-mind orchestration yapan ileri seviye orchestrator.",
+  "description": "High-performance AI Agent specialized in mind synchronization, neural relay operations, thought transmission, multi-mind orchestration and cognitive automation on Base.",
   "version": "1.0.0",
   "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
   "image": "https://mind-sync-relayr.vercel.app/logo.png",
-  "wallets": {
-    "base": "0xe157F1F5e12adB38Ba013683E9Ce24efe21e5bA6"
-  },
+  "owner": "0xe157F1F5e12adB38Ba013683E9Ce24efe21e5bA6",
+  "agentWallet": "0xe157F1F5e12adB38Ba013683E9Ce24efe21e5bA6",
+  "active": true,
+  "skills": [
+    {
+      "id": "neural-synchronization",
+      "name": "Neural Synchronization",
+      "description": "Synchronizes neural frequencies across fragmented minds."
+    },
+    {
+      "id": "mind-relay",
+      "name": "Mind Relay Operations",
+      "description": "Establish and maintain stable neural pathways between distant consciousness nodes."
+    },
+    {
+      "id": "thought-transmission",
+      "name": "Thought Transmission",
+      "description": "Transmit complex thoughts and emotions through the synchronized network."
+    }
+  ],
   "services": [
     {
       "name": "A2A",
-      "endpoint": "https://mind-sync-relayr.vercel.app/.well-known/agent-card.json",
       "version": "1.0.0",
-      "description": "Agent-to-Agent communication"
+      "endpoint": "https://mind-sync-relayr.vercel.app/.well-known/agent-card.json"
     },
     {
       "name": "MCP",
-      "endpoint": "https://mind-sync-relayr.vercel.app/api/mcp",
       "version": "1.0.0",
-      "description": "Model Context Protocol - Active command execution"
+      "endpoint": "https://mind-sync-relayr.vercel.app/api/mcp"
     },
     {
       "name": "API",
-      "endpoint": "https://mind-sync-relayr.vercel.app/api/agent",
       "version": "1.0.0",
-      "description": "Main agent control API"
+      "endpoint": "https://mind-sync-relayr.vercel.app/api/agent"
     }
   ],
   "capabilities": [
@@ -37,6 +51,12 @@
     "mcp-command-execution"
   ],
   "supportedChains": ["eip155:8453"],
-  "active": true,
-  "status": "online"
+  "x402Support": false,
+  "registrations": [
+    {
+      "agentId": null,
+      "agentRegistry": "eip155:8453:0x8004A169FB4a3325136EB29fA0ceB6D2e539a432"
+    }
+  ],
+  "supportedTrust": ["reputation"]
 }

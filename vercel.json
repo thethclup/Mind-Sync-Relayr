@@ -1,0 +1,17 @@
+{
+  "functions": {
+    "api/mcp.ts": {
+      "memory": 1024,
+      "maxDuration": 10
+    },
+    "api/agent.ts": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  },
+  "rewrites": [
+    { "source": "/api/mcp", "destination": "/api/mcp.ts" },
+    { "source": "/api/agent", "destination": "/api/agent.ts" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

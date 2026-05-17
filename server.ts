@@ -17,6 +17,33 @@ async function startServer() {
       status: "active",
       description: "Active and optimized MCP server for Mind Sync Relay Orchestrator",
       capabilities: ["neural-synchronization", "mind-relay-operations", "thought-transmission"],
+      tools: [
+        {
+          name: "sync_nodes",
+          description: "Initialize synchronization between two neural nodes",
+          input_schema: {
+            type: "object",
+            properties: {
+              targetId: { type: "string" },
+              intensity: { type: "number" }
+            },
+            required: ["targetId"]
+          }
+        }
+      ],
+      prompts: [
+        {
+          name: "start_relay",
+          description: "Provide initialization commands for a new neural relay flow"
+        }
+      ],
+      resources: [
+        {
+          uri: "mind://network/status",
+          name: "Neural Network Status",
+          description: "Real-time state of the connected neural relay nodes"
+        }
+      ],
       timestamp: new Date().toISOString()
     });
   });

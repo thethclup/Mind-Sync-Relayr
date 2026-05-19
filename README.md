@@ -1,43 +1,64 @@
 # Mind Sync Relay
 
-**Mind Sync Relay** is a serene yet strategic puzzle game where you act as a **Neural Relay Operator**. Your mission is to reconnect fragmented minds in a vast, broken digital consciousness network by building efficient signal pathways and creating harmonious connections.
+Mind Sync Relay is a high-performance puzzle and synchronization platform where you act as a **Neural Relay Operator**. Your core mission is to reconnect and manage fragmented minds in a digital consciousness network by building efficient signal pathways.
 
-## Features Let's Create Harmony
+## Overview
 
-- **Neural Network:** Reconnect floating mind nodes by drawing signal paths.
-- **Match Frequencies:** Connect paths based on node frequencies (Calm, Logic, Chaos, Emotion).
-- **On-chain Integration:** Leverage Base Mainnet features to verify synchronization cascades via signatures.
-- **ERC-8004 Trustless Agents:** Mind Sync Relay features an integrated AI Orchestrator Agent.
-- **ERC-8021 Transaction Attribution:** Supports transaction attribution standards for builders.
+- **App Name:** Mind Sync Relay
+- **Version:** 1.0.0
+- **Supported Network:** Base Mainnet
+- **Agent Integration:** Fully compliant with ERC-8004 Trustless Agents standards.
 
-## Network & Integration
+## Technical Architecture
 
-This platform natively supports connection to Base networks. Connect your wallet as an Operator and use Base network to record your Mind Network synchronizations on-chain.
+This repository uses a modern, responsive frontend stack alongside seamless Web3 integration and native Agent compatibility.
 
-- **Builder Code:** `bc_9g7agms9`
-- **Agent Orchestrator:** Located at `.well-known/agent-card.json`
-
-## Local Development
-
-The project is built using:
+### Tech Stack
 - React 19 + TypeScript
 - Vite
 - Tailwind CSS
-- Express (for the Agent MCP API and Agent Routing)
 - Wagmi + Viem
+- Agent Protocols: ERC-8004 Registration, A2A Communication, MCP
 
-To run the project locally:
+## Agent Registration & MCP Setup
 
-```bash
-npm install
-npm run dev
-```
+### MCP Capability
+Mind Sync Relay includes an active Model Context Protocol (MCP) server. 
+It supports the following core tools for multi-track management and competitive synchronization:
+- `get_race_status`
+- `start_race`
+- `get_leaderboard`
+- `optimize_speed`
+- `get_track_info`
 
-*Note: Environment variables for external services should be configured in `.env.local` adhering to `.env.example`. No sensitive API keys are exposed directly into the codebase repository.*
+**Endpoint Access:**
+The MCP routing is fully compliant with the App Router format (`/api/mcp`).
 
-## Trustless Agents - ERC-8004
-This platform includes an endpoint describing our Agent orchestration capabilities via the `/.well-known/agent-card.json` standard. Check out the internal API for agent Model Context Protocol.
+### Trustless Agent Features
+The **Mind Sync Relay Orchestrator** is registered natively via ERC-8004, offering:
+- **Neural Synchronization:** Harmonizing frequencies across minds.
+- **Mind Relay Operations:** Maintaining active node flows.
+- **Thought Transmission:** Routing data streams efficiently.
 
-## Security
-- Do not commit your own private `.env` files.
-- The `GEMINI_API_KEY` operates server-side, never exposing it directly on the client.
+View the active registered capabilities here:
+- Agent Card: `/.well-known/agent-card.json`
+
+## Development Guide
+
+Follow these steps to run the environment locally.
+
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Configure your environment:**
+   Create a `.env` file based on `.env.example` in the root folder.
+   **Note:** Never commit active private keys or sensitive API details to version control! 
+
+3. **Start the local server:**
+   ```bash
+   npm run dev
+   ```
+
+Once started, the application will boot and initialize the MCP node and frontend application simultaneously on port 3000.

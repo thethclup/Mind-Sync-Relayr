@@ -1,4 +1,6 @@
-import { NextResponse } from 'next/server';
+export const config = {
+  runtime: 'edge', // Vercel Edge Runtime for standard Request/Response support
+};
 
 const TOOLS = [
   {
@@ -28,21 +30,30 @@ const TOOLS = [
   }
 ];
 
-export async function GET() {
-  return NextResponse.json({
-    protocol: "MCP",
-    version: "1.0.0",
-    name: "Mind Sync Relay Orchestrator",
-    status: "active",
-    tools: [
-      "get_race_status",
-      "start_race",
-      "get_leaderboard",
-      "optimize_speed",
-      "get_track_info"
-    ],
-    timestamp: new Date().toISOString()
-  });
+export async function GET(req: Request) {
+  return new Response(
+    JSON.stringify({
+      protocol: "MCP",
+      version: "1.0.0",
+      name: "Mind Sync Relay MCP Endpoint",
+      status: "active",
+      tools: [
+        "get_race_status",
+        "start_race",
+        "get_leaderboard",
+        "optimize_speed",
+        "get_track_info"
+      ],
+      timestamp: new Date().toISOString()
+    }),
+    {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*"
+      }
+    }
+  );
 }
 
 export async function POST(req: Request) {
@@ -50,7 +61,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { method, params, id } = body;
 
-    let result: any = {};
+    let result = {};
 
     switch (method) {
       case "initialize":
@@ -58,7 +69,7 @@ export async function POST(req: Request) {
           protocolVersion: "2024-11-05",
           capabilities: {},
           serverInfo: {
-            name: "Mind Sync Relay Orchestrator",
+            name: "Mind Sync Relay MCP Endpoint",
             version: "1.0.0"
           }
         };
@@ -88,7 +99,6 @@ export async function POST(req: Request) {
         break;
 
       default:
-        // Generic fallback for custom commands or older format
         result = {
           success: true,
           message: "Command routed via MCP",
@@ -97,24 +107,32 @@ export async function POST(req: Request) {
         };
     }
 
-    return NextResponse.json(
-      { jsonrpc: "2.0", id: id || null, result },
+    return new Response(
+      JSON.stringify({ jsonrpc: "2.0", id: id || null, result }),
       {
+        status: 200,
         headers: {
-          "Access-Control-Allow-Origin": "*",
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*"
         }
       }
     );
   } catch (error) {
-    return NextResponse.json(
-      { error: "Invalid request payload" },
-      { status: 400 }
+    return new Response(
+      JSON.stringify({ error: "Invalid request payload" }),
+      {
+        status: 400,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*"
+        }
+      }
     );
   }
 }
 
 export async function OPTIONS() {
-  return new NextResponse(null, {
+  return new Response(null, {
     status: 204,
     headers: {
       "Access-Control-Allow-Origin": "*",

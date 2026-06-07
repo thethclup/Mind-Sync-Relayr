@@ -4,7 +4,7 @@
  */
 
 export const ATTRIBUTION_CODE = "[ATTRIBUTION_CODE]";
-export const BUILDER_CODE = "bc_9g7agms9";
+export const BUILDER_CODE = "[BUILDER_CODE]";
 
 export function generateAttributionPayload(action: string, metadata: any) {
   return {

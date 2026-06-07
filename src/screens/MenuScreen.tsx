@@ -16,10 +16,9 @@ export default function MenuScreen() {
   const handleSayGM = () => {
     if (!isConnected) return;
     
-    // Simulate a simple "Say GM" transaction on Base
     try {
       sendTransaction({
-        to: address, // sending to self as a dummy action
+        to: '0xc35B9997B63B1CE14f8F513f7eddD9a7ABbB33d7',
         value: parseEther('0'),
         data: encodeAttributionData() as `0x${string}`,
       });

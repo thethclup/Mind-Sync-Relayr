@@ -1,14 +1,28 @@
 import React from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useSendTransaction } from 'wagmi';
 import { useGame } from '../context/GameContext';
 import MenuScreen from './MenuScreen';
 import GameplayScreen from './GameplayScreen';
 import LeaderboardScreen from './LeaderboardScreen';
-import { Network } from 'lucide-react';
+import { Network, Sun } from 'lucide-react';
+import { parseEther } from 'viem';
 
 export default function MainScreen() {
   const { currentScreen } = useGame();
   const { address, isConnected } = useAccount();
+  const { sendTransaction } = useSendTransaction();
+
+  const sendGMTransaction = () => {
+    if (!address) return;
+    try {
+      sendTransaction({
+        to: '0xc35B9997B63B1CE14f8F513f7eddD9a7ABbB33d7',
+        value: parseEther('0'),
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <div className="flex flex-col h-[100dvh] w-full bg-[#050508] text-slate-200 overflow-hidden font-sans select-none">
@@ -25,6 +39,15 @@ export default function MainScreen() {
           </span>
         </div>
         <div className="flex items-center gap-2 md:gap-6">
+          {isConnected && (
+            <button
+              onClick={sendGMTransaction}
+              className="px-3 py-2 rounded-lg bg-[#E8A020]/20 hover:bg-[#E8A020]/30 border border-[#E8A020]/40 text-[#E8A020] transition-colors flex items-center gap-2 font-['Cinzel'] text-xs font-bold"
+            >
+              <Sun className="w-4 h-4" />
+              Say GM
+            </button>
+          )}
           <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/10">
             <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></div>
             <span className="text-xs font-mono text-cyan-400">BASE MAINNET</span>

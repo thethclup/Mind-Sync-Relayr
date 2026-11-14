@@ -1,10 +1,17 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Network, Activity, Settings, Maximize2, Zap } from 'lucide-react';
+import { Network, Settings, Zap, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
-import { useAccount, useSignMessage, useSendTransaction } from 'wagmi';
+import {
+  useAccount,
+  useSignMessage,
+  useSendTransaction,
+  useSwitchChain,
+  useWaitForTransactionReceipt,
+} from 'wagmi';
 import { parseEther } from 'viem';
 import { encodeAttributionData } from '../lib/erc8021';
+import { baseDenim } from '../lib/wagmi';
 
 // Basic Mind Node interface
 interface Node {
@@ -31,10 +38,36 @@ export default function GameplayScreen() {
   const [draggingFrom, setDraggingFrom] = useState<Node | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [showFullSync, setShowFullSync] = useState(false);
+  const [toast, setToast] = useState<{ type: 'info' | 'error'; text: string } | null>(null);
+  const [gmTxHash, setGmTxHash] = useState<`0x${string}` | undefined>(undefined);
   
-  const { isConnected, address } = useAccount();
+  const { isConnected, address, chainId } = useAccount();
   const { signMessageAsync } = useSignMessage();
-  const { sendTransaction } = useSendTransaction();
+  const { switchChainAsync } = useSwitchChain();
+  const { sendTransactionAsync, isPending: isSendingTx } = useSendTransaction();
+
+  const { isLoading: isConfirmingTx, isSuccess: isConfirmedTx, data: receipt } =
+    useWaitForTransactionReceipt({
+      hash: gmTxHash,
+      chainId: baseDenim.id,
+      pollingInterval: 200,
+    });
+
+  useEffect(() => {
+    if (isConfirmedTx && receipt) {
+      setToast({
+        type: 'info',
+        text: `Confirmed on Base Mainnet (Denim) in canonical block #${receipt.blockNumber.toString()}`,
+      });
+      setGmTxHash(undefined);
+    }
+  }, [isConfirmedTx, receipt]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 5000);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   // Initialize level
   useEffect(() => {
@@ -254,41 +287,69 @@ export default function GameplayScreen() {
 
   const handleRecordOnChain = async () => {
     if (!isConnected || !address) {
-      alert("Connect wallet from Menu to record on-chain!");
+      setToast({ type: 'error', text: 'Connect wallet from Menu to record on Base Mainnet.' });
       return;
     }
     
     try {
-      const message = `Mind Sync Relay\n\nI synchronized a neural network with ${syncRate}% efficiency!\nTimestamp: ${Date.now()}`;
+      if (chainId !== baseDenim.id) {
+        await switchChainAsync({ chainId: baseDenim.id });
+      }
+      const message = `Mind Sync Relay (Base Mainnet Denim)\n\nI synchronized a neural network with ${syncRate}% efficiency!\nChain ID: ${baseDenim.id}\nTimestamp: ${Date.now()}`;
       await signMessageAsync({ message, account: address });
       setNetworksBuilt(prev => prev + 1);
       generateLevel(); // restart
-      alert("Synchronization verified and recorded successfully!");
+      setToast({ type: 'info', text: 'Synchronization verified on Base Mainnet (Denim)!' });
     } catch (err) {
       console.error(err);
+      setToast({ type: 'error', text: 'Signature cancelled or failed.' });
     }
   };
 
-  const handleSayGM = () => {
+  const handleSayGM = async () => {
     if (!isConnected || !address) {
-      alert("Connect wallet from Menu to record on-chain!");
+      setToast({ type: 'error', text: 'Connect wallet from Menu to transact on Base Mainnet.' });
       return;
     }
     
     try {
-      sendTransaction({
+      if (chainId !== baseDenim.id) {
+        await switchChainAsync({ chainId: baseDenim.id });
+      }
+      const hash = await sendTransactionAsync({
+        chainId: baseDenim.id,
         to: '0xc35B9997B63B1CE14f8F513f7eddD9a7ABbB33d7',
         value: parseEther('0'),
         data: encodeAttributionData() as `0x${string}`,
       });
-      alert('GM Transaction sent to network!');
+      setGmTxHash(hash);
+      setToast({ type: 'info', text: 'GM submitted to Base Mainnet — awaiting 200ms canonical block...' });
     } catch (err) {
       console.error(err);
+      setToast({ type: 'error', text: 'Transaction cancelled or failed.' });
     }
   };
 
   return (
-    <div className="w-full h-full grid grid-cols-1 md:grid-cols-12 gap-4 p-4 overflow-y-auto md:overflow-hidden" ref={containerRef}>
+    <div className="w-full h-full grid grid-cols-1 md:grid-cols-12 gap-4 p-4 overflow-y-auto md:overflow-hidden relative" ref={containerRef}>
+      {/* Inline Status Toast */}
+      {toast && (
+        <div
+          className={`fixed top-20 right-4 z-50 flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs font-mono backdrop-blur-md shadow-lg ${
+            toast.type === 'error'
+              ? 'bg-red-950/90 border-red-500/40 text-red-200'
+              : 'bg-slate-900/95 border-cyan-500/40 text-cyan-200'
+          }`}
+        >
+          {toast.type === 'error' ? (
+            <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+          ) : (
+            <CheckCircle2 className="w-4 h-4 text-cyan-400 shrink-0" />
+          )}
+          <span>{toast.text}</span>
+        </div>
+      )}
+
       {/* Central Gameplay / Mind Relay Chamber */}
       <div className="md:col-span-7 flex flex-col gap-4 relative h-full min-h-[50vh]">
         <div className="relative flex-1 bg-gradient-to-b from-black to-[#0a0a15] rounded-3xl border border-white/5 overflow-hidden">
@@ -300,7 +361,7 @@ export default function GameplayScreen() {
           
           {/* HUD (Overlay Game HUD) */}
           <div className="absolute top-6 left-6 flex flex-col gap-1 z-10 pointer-events-none">
-            <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">Current Status</span>
+            <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">Current Status · Base Mainnet Denim</span>
             <h2 className="text-xl md:text-2xl font-light text-white">Neural Connection: <span className="text-cyan-400 font-bold">{syncRate === 100 ? 'SYNCED' : 'ACTIVE'}</span></h2>
           </div>
 
@@ -364,8 +425,8 @@ export default function GameplayScreen() {
                 <span className="text-pink-400 font-mono">72.9 Hz</span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-white/60">MEMORY (Legacy)</span>
-                <span className="text-amber-400 font-mono">12.5 Hz</span>
+                <span className="text-white/60">DENIM BLOCK CADENCE</span>
+                <span className="text-amber-400 font-mono">200 ms</span>
               </div>
             </div>
           </div>
@@ -380,12 +441,17 @@ export default function GameplayScreen() {
           <div className="grid grid-cols-2 gap-3 mt-4">
             <button 
               onClick={handleSayGM}
-              className="flex flex-col items-center justify-center gap-2 p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors"
+              disabled={isSendingTx || isConfirmingTx}
+              className="flex flex-col items-center justify-center gap-2 p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 disabled:opacity-60 transition-colors"
             >
               <div className="p-2 bg-cyan-400/20 rounded-lg">
-                <svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                {isSendingTx || isConfirmingTx ? (
+                  <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
+                ) : (
+                  <svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                )}
               </div>
-              <span className="text-[10px] font-bold">SAY GM</span>
+              <span className="text-[10px] font-bold">{isConfirmingTx ? 'CONFIRMING...' : 'SAY GM'}</span>
             </button>
             <button 
               onClick={handleRecordOnChain}
@@ -398,7 +464,7 @@ export default function GameplayScreen() {
             </button>
           </div>
           <p className="mt-4 text-[9px] text-center text-white/30 tracking-tight">
-            ERC-8021 ATTRIBUTION CODE: [BUILDER_CODE]
+            BASE MAINNET · DENIM 200MS · ERC-8021 ATTRIBUTION
           </p>
         </div>
       </div>

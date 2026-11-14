@@ -1,29 +1,67 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { useAccount, useConnect, useDisconnect, useSendTransaction } from 'wagmi';
+import {
+  useAccount,
+  useConnect,
+  useDisconnect,
+  useSendTransaction,
+  useSwitchChain,
+  useWaitForTransactionReceipt,
+} from 'wagmi';
 import { parseEther } from 'viem';
 import { useGame } from '../context/GameContext';
-import { BrainCircuit, Play, Trophy, Hexagon, LogOut, MessageCircle } from 'lucide-react';
+import { BrainCircuit, Play, Trophy, Hexagon, LogOut, MessageCircle, Loader2 } from 'lucide-react';
 import { encodeAttributionData } from '../lib/erc8021';
+import { baseDenim } from '../lib/wagmi';
 
 export default function MenuScreen() {
   const { setCurrentScreen } = useGame();
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chainId } = useAccount();
   const { connectors, connect } = useConnect();
   const { disconnect } = useDisconnect();
-  const { sendTransaction } = useSendTransaction();
+  const { switchChainAsync } = useSwitchChain();
+  const { sendTransactionAsync, isPending: isSending } = useSendTransaction();
+  const [txHash, setTxHash] = useState<`0x${string}` | undefined>(undefined);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
-  const handleSayGM = () => {
+  const { isLoading: isConfirming, isSuccess: isConfirmed, data: receipt } =
+    useWaitForTransactionReceipt({
+      hash: txHash,
+      chainId: baseDenim.id,
+      pollingInterval: 200,
+    });
+
+  useEffect(() => {
+    if (isConfirmed && receipt) {
+      setStatusMessage(`Confirmed in canonical block #${receipt.blockNumber.toString()}`);
+      setTxHash(undefined);
+    }
+  }, [isConfirmed, receipt]);
+
+  useEffect(() => {
+    if (!statusMessage) return;
+    const t = setTimeout(() => setStatusMessage(null), 5000);
+    return () => clearTimeout(t);
+  }, [statusMessage]);
+
+  const handleSayGM = async () => {
     if (!isConnected) return;
-    
+
     try {
-      sendTransaction({
+      if (chainId !== baseDenim.id) {
+        await switchChainAsync({ chainId: baseDenim.id });
+      }
+      const hash = await sendTransactionAsync({
+        chainId: baseDenim.id,
         to: '0xc35B9997B63B1CE14f8F513f7eddD9a7ABbB33d7',
         value: parseEther('0'),
         data: encodeAttributionData() as `0x${string}`,
       });
+      setTxHash(hash);
+      setStatusMessage('Sent to Base Mainnet — awaiting 200ms block...');
     } catch (err) {
       console.error(err);
+      setStatusMessage('Transaction cancelled or rejected.');
     }
   };
 
@@ -60,7 +98,7 @@ export default function MenuScreen() {
           Mind Sync
         </h1>
         <p className="text-cyan-200/60 tracking-[0.3em] font-mono text-sm mb-12 uppercase drop-shadow-md">
-          Neural Relay Protocol
+          Neural Relay Protocol · Base Mainnet
         </p>
 
         <div className="flex flex-col gap-4 w-full max-w-xs">
@@ -88,15 +126,20 @@ export default function MenuScreen() {
           {isConnected ? (
             <div className="flex flex-col gap-3">
               <div className="text-xs text-center text-slate-400 font-mono bg-slate-900/50 py-2 rounded-lg border border-slate-800">
-                Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
+                Connected: {address?.slice(0, 6)}...{address?.slice(-4)} · {chainId === baseDenim.id ? 'Denim 200ms' : `Chain ${chainId}`}
               </div>
               <div className="flex gap-2">
                 <button 
                   onClick={handleSayGM}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-900/30 hover:bg-blue-800/50 border border-blue-800/50 hover:border-blue-500/50 rounded-lg transition-all text-sm text-blue-200"
+                  disabled={isSending || isConfirming}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-900/30 hover:bg-blue-800/50 disabled:opacity-60 border border-blue-800/50 hover:border-blue-500/50 rounded-lg transition-all text-sm text-blue-200"
                 >
-                  <MessageCircle className="w-4 h-4" />
-                  Say GM (On-chain)
+                  {isSending || isConfirming ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <MessageCircle className="w-4 h-4" />
+                  )}
+                  {isConfirming ? 'Confirming...' : 'Say GM (On-chain)'}
                 </button>
                 <button 
                   onClick={() => disconnect()}
@@ -105,15 +148,20 @@ export default function MenuScreen() {
                   <LogOut className="w-4 h-4" />
                 </button>
               </div>
+              {statusMessage && (
+                <div className="text-[11px] text-center font-mono text-cyan-300/90 bg-cyan-950/40 border border-cyan-500/20 rounded-lg px-3 py-1.5">
+                  {statusMessage}
+                </div>
+              )}
             </div>
           ) : (
             connectors.map((connector) => (
               <button
                 key={connector.uid}
-                onClick={() => connect({ connector })}
+                onClick={() => connect({ connector, chainId: baseDenim.id })}
                 className="w-full py-3 bg-slate-800/50 hover:bg-slate-700/80 border border-slate-700 hover:border-slate-500 rounded-xl transition-all text-sm text-slate-300 flex items-center justify-center gap-2"
               >
-                Connect Operator Wallet
+                Connect Operator Wallet ({connector.name})
               </button>
             ))
           )}
